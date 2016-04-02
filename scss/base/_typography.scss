@@ -1,0 +1,72 @@
+// Typography
+
+h1, .h1,
+h2, .h2,
+h3, .h3,
+h4, .h4,
+h5, .h5,
+h6, .h6,
+.h {
+  font-family: $headings-font-family;
+  font-weight: 400;
+  margin: 0 0 0.7em;
+  color: $headings-color;
+}
+
+h1, .h1 {
+  font-size: $h1-font-size;
+  letter-spacing: 1px;
+  @include media('screen', '<tablet') {
+    font-size: round($h1-font-size * 0.9);
+  }
+}
+
+h2, .h2 {
+  font-size: $h2-font-size;
+  @include media('screen', '<tablet') {
+    font-size: round($h2-font-size * 0.9);
+  }
+}
+
+h3, .h3 {
+  font-size: $h3-font-size;
+  @include media('screen', '<tablet') {
+    font-size: round($h3-font-size * 0.9);
+  }
+}
+
+h4, .h4 {
+  font-size: $h4-font-size;
+  @include media('screen', '<tablet') {
+    font-size: round($h4-font-size * 0.9);
+  }
+}
+
+h5, .h5 {
+  font-size: $h5-font-size;
+  @include media('screen', '<tablet') {
+    font-size: round($h5-font-size * 0.9);
+  }
+}
+
+h6, .h6 {
+  font-size: $h6-font-size;
+  @include media('screen', '<tablet') {
+    font-size: round($h6-font-size * 0.9);
+  }
+}
+
+p {
+  margin: 0 0 1.1em;
+}
+
+a {
+  color: $base-link-color;
+  &:hover,
+  &:focus {
+    text-decoration: none;
+  }
+  &.add-color {
+    color: currentColor;
+  }
+}
