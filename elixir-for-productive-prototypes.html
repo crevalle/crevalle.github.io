@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="apple-touch-icon" sizes="57x57" href="favicons/apple-icon-57x57.png">
+  <link rel="apple-touch-icon" sizes="60x60" href="favicons/apple-icon-60x60.png">
+  <link rel="apple-touch-icon" sizes="72x72" href="favicons/apple-icon-72x72.png">
+  <link rel="apple-touch-icon" sizes="76x76" href="favicons/apple-icon-76x76.png">
+  <link rel="apple-touch-icon" sizes="114x114" href="favicons/apple-icon-114x114.png">
+  <link rel="apple-touch-icon" sizes="120x120" href="favicons/apple-icon-120x120.png">
+  <link rel="apple-touch-icon" sizes="144x144" href="favicons/apple-icon-144x144.png">
+  <link rel="apple-touch-icon" sizes="152x152" href="favicons/apple-icon-152x152.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="favicons/apple-icon-180x180.png">
+  <link rel="icon" type="image/png" sizes="192x192"  href="favicons/android-icon-192x192.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicons/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="96x96" href="favicons/favicon-96x96.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="favicons/favicon-16x16.png">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="msapplication-TileColor" content="#ffffff">
+  <meta name="msapplication-TileImage" content="favicons/ms-icon-144x144.png">
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:site" content="@crevalleTech" />
+  <meta name="twitter:title" content="Elixir For Productive Prototypes - Crevalle" />
+  <meta name="twitter:description" content="How Elixir helped me build a scalable prototype for KLEO, an app that summarizes your weekly meeting schedule." />
+  <meta name="twitter:image" content="images/logo.svg" />
+
+  <meta property="og:url"         content="http://crevalle.io/elixir-for-productive-prototypes.html" />
+  <meta property="og:type"         content="website" />
+  <meta property="og:title"       content="Elixir For Productive Prototypes - Crevalle" />
+  <meta property="article:author" content="https://www.linkedin.com/in/desmondbowe" />
+  <meta property="og:description" content="How Elixir helped me build a scalable prototype for KLEO, an app that summarizes your weekly meeting schedule." />
+  <meta property="og:image" content="images/logo.svg"/>
+  <title>Elixir for Productive Prototypes - Crevalle</title>
+  <link media="all" rel="stylesheet" href="css/main.css">
+  <!-- required stylesheets and scripts -->
+  <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js" defer></script>
+  <script type="text/javascript">window.jQuery || document.write('<script src="js/jquery-1.11.2.min.js"><\/script>')</script>
+  <script type="text/javascript" src="js/jquery.main.js" defer></script>
+</head>
+<body>
+  <div id="wrapper">
+    <header id="header">
+      <div class="container">
+        <div class="logo">
+          <a href="#"><img src="images/logo.svg" width="95" height="21" alt="CREVALLE"></a>
+        </div>
+        <div class="link-holder">
+          <span>Elixir for Productive Prototypes</span>
+        </div>
+      </div>
+    </header>
+    <main id="main" role="main">
+      <div class="container">
+        <section class="intro-section show-header">
+          <div class="big-logo">
+            <a href="index.html">
+              <img src="images/logo.svg" width="195" height="186" alt="CREVALLE WORLD WIDE WEB SERVICES LOS ANGELES, CALIFORNIA">
+            </a>
+            <p>Blog</p>
+          </div>
+          <strong class="big-title">Elixir for Productive Prototypes</strong>
+          <time class="custom-time" datetime="2017-11-27">November 27, 2017</time>
+        </section>
+        <hr class="range">
+        <div class="sample-text">
+          <p><strong>Summary:</strong> One of the best parts of being an independent consultant is having the freedom to explore ideas and spin up fun side products using cool technology. Today we'll look at my newest project, <a href="https://kleo.crevalle.io" target="_blank">KLEO</a>, and why Elixir is a great tool for these prototypes.</p>
+          <p>Have you ever found yourself at the end of the work week wondering where all your time went?  You had several meetings here and there, plus lunch with an old friend, and suddenly it was Friday.  What happened?  Was it a productive week?</p>
+          <p>To answer this question, I built <a href="https://kleo.crevalle.io" target="_blank">KLEO</a>.  KLEO connects to your Google Calendar and summarizes your time spent in one-off meetings, recurring meetings, and all-day events.  It lists the people you’ve been spending all your time with.  On Friday evenings, it sends you a quick summary email.</p>
+          <p>It’s fairly basic, but perhaps you’ll find it useful.  What’s <i>interesting</i> is how using Elixir to build this prototype means my MVP can easily scale to thousands of users - with no caching layer or background job system.  Can your Rails app do that?</p>
+          <p>Let's look at the two main pieces of the system: displaying the weekly breakdown, and sending a summary email every Friday evening at 7pm (user’s local time).  We'll see how Elixir makes both of these pieces easy.</p>
+          <h3>Showing the Weekly Breakdown</h3>
+          <p>KLEO lets you look into past weeks and upcoming weeks.  Because your calendar - like life itself - is constantly changing, we hit Google’s Calendar API on every request to fetch the latest data.  “But wait,” you say, “synchronous external calls during user requests?  What a laggy experience.”  Fortunately, Google’s API is fast and so is the Phoenix framework, so total response times are around 200ms.</p>
+          <p>The bigger problem for a web application is this: while the server is waiting on a response from Google, are my other users stuck waiting for their pages to load? If you’re using Rails, the answer is yes.  Puma will happily allocate a separate thread to a user and do useful work while it’s waiting on an external network call, up to a point- the number of threads you’ve specified, usually fewer than 20.  And good luck with the occasional garbage collection that stops your entire app cold.</p>
+          <p>With Elixir and Phoenix, the answer is no.  Phoenix allocates a process per user request, and processes in the BEAM VM are cheap.  Processes waiting on IO are put to sleep and not scheduled, meaning that your popular app's increasing number of external calls will not affect its capacity to serve new user requests with brand new processes.  Your app stays responsive and your users stay happy, even under load.
+          <p>Plus, since each process is individually garbage collected, no catastrophic GC spikes will ripple through your system.</p>
+          <p>Now if an external resource has rate limits or slow response times, you should consider prefetching the data and saving it for later.  The point is that kind of complexity is not necessary for our own app’s performance at this level of load.  I can cheaply make synchronous network calls whether I have 1 concurrent user or 1,000.</p>
+          <h3>Sending a Summary Email</h3>
+          <p>Seems straightforward, right?  If you’re experienced with Rails, setting up a background job system and queue is almost automatic. Most apps barely function without one.  In fact, we’ve become so accustomed to this practice that we rarely stop and ask why these extra resources and dependencies are needed for such a straightforward task.</p>
+          <p>Here’s how we do this in Elixir.  When the app boots, a worker process is started for each user and added to a supervision tree which will restart the worker if it crashes.  When a user signs up, a worker process is immediately spawned and added to this same tree.  We pull the user's timezone off their browser and put the process to sleep for the amount of time until next Friday at 7pm, user's local time.  Once that interval expires, the process wakes up, fetches calendar data for the week, sends the user an email, and goes back to sleep until the following Friday.</p>
+          <p>We rely on the cheapness of Erlang processes to scale this simple approach to tens of thousands of users.  Remember, sleeping processes are ignored by the scheduler and will not affect the performance of active processes, so our system remains responsive with 1 or 10,000 users.</p>
+          <p>Further, because all my data stays in the same process memory, I don’t have to juggle the complexity of passing serializable terms through different systems just to bring them back again to do useful work.  No more: <ul><li>accidentally passing a reified object to Redis</li><li>matching queue names</li><li>opening a web browser to debug queuing issues or job failures</li><li>remembering to restart Resque/Sidekiq when my code changes</li><li>clearing out stale data from the queue when my objects change</li></ul></p>
+          <p>God help me if a user disables their notifications and I have to pull their scheduled job off the queue!</p>
+          <p>Some of you might say “well that’s not too hard, just multiplex your terminal/use this nifty script I wrote/add a bunch of <code>if...else</code> blocks/stop complaining.”  My point is: isn’t it simpler and easier to have all this functionality in one single application?  Defending the status quo reminds one of <a href="https://www.snopes.com/weddings/newlywed/secret.asp" target="_blank">cutting the ends off the roast</a>.</p>
+          <h3>Caveats</h3>
+          <p>With 10,000 concurrent users, my architecture may shift slightly.  But not much.  And 10,000 is much further on the horizon than, say, 300 concurrent users, which is fairly healthy in itself.  How many users does your current architecture support?</p>
+          <h3>More Caveats</h3>
+          <p>Rails can scale.  It’s true.  With time and money, Rails can scale.  I've done it.</p>
+          <h3>No More Caveats</h3>
+          <p>With Elixir, I get the best of both worlds.  I can rapidly spin up products because the language is sensible and because I don’t need additional infrastructure just for basic performance.  Scaling happens <i>at scale</i>, not at a few dozen simultaneous users.</p>
+          <p>If you’ve been looking for a language that lets you build a productive prototype that you don’t have to throw away in six months, try Elixir.</p>
+          <p>If you’ve been wondering where your time goes, try <a href="https://kleo.crevalle.io" target="_blank">KLEO</a> :D.</p>
+
+          <div class="author-holder">
+            <a class="name" href="mailto:desmond@crevalle.io">— Desmond Bowe</a>
+            <strong class="position">Crevalle founder</strong>
+          </div>
+        </div>
+        <div class="tile-holder">
+          <section class="section-contact">
+            <div class="sub-section">
+              <div class="title-box">
+                <strong class="h1">Let's work together.</strong>
+                <p>Project? Question? Reach out and say hello.</p>
+              </div>
+              <ul class="social-networks">
+                <li>
+                  <a href="mailto:&#104;&#101;&#108;&#108;&#111;&#064;&#099;&#114;&#101;&#118;&#097;&#108;&#108;&#101;&#046;&#105;&#111;">
+                    <i class="icon-email"></i>
+                    <div class="text-box">
+                      <p>Email us at</p>
+                      <span class="sub-link">&#104;&#101;&#108;&#108;&#111;&#064;&#099;&#114;&#101;&#118;&#097;&#108;&#108;&#101;&#046;&#105;&#111;</span>
+                    </div>
+                  </a>
+                </li>
+                <li>
+                  <a href="#">
+                    <i class="icon-twetter"></i>
+                    <div class="text-box">
+                      <p>Tweet at us</p>
+                      <span class="sub-link">@crevalleTech</span>
+                    </div>
+                  </a>
+                </li>
+              </ul>
+            </div>
+            <div class="sub-section form-holder">
+              <div class="title-box">
+                <strong class="h1">Let's stay in touch</strong>
+                <p>Sign up to our infrequent newsletter to hear about what we are thinking about.</p>
+              </div>
+              <form action="#" id="contact-form" class="contact-form">
+                <div class="input-box">
+                  <input type="email" placeholder="email@example.com" id="i1">
+                  <label for="i1">Your email address</label>
+                </div>
+                <button type="submit">Subscribe <i class="icon-chevron-right"></i></button>
+              </form>
+            </div>
+          </section>
+        </div>
+        <div class="list-bar">
+          <a class="ico-link" href="index.html">
+            <img src="images/transistor-rotated-small.png" width="50" alt="CREVALLE">
+          </a>
+        </div>
+      </div>
+    </main>
+  </div>
+    <script type="text/javascript">
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+      ga('create', 'UA-58551961-1', 'auto');
+      ga('send', 'pageview');
+    </script>
+</body>
+</html>
+
