@@ -631,3 +631,13 @@ small {
 		}
 	}
 }
+
+.links {
+  .prev {
+    float: left;
+  }
+
+  .next {
+    float: right;
+  }
+}
