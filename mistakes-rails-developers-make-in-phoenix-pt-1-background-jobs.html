@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="apple-touch-icon" sizes="57x57" href="favicons/apple-icon-57x57.png">
+  <link rel="apple-touch-icon" sizes="60x60" href="favicons/apple-icon-60x60.png">
+  <link rel="apple-touch-icon" sizes="72x72" href="favicons/apple-icon-72x72.png">
+  <link rel="apple-touch-icon" sizes="76x76" href="favicons/apple-icon-76x76.png">
+  <link rel="apple-touch-icon" sizes="114x114" href="favicons/apple-icon-114x114.png">
+  <link rel="apple-touch-icon" sizes="120x120" href="favicons/apple-icon-120x120.png">
+  <link rel="apple-touch-icon" sizes="144x144" href="favicons/apple-icon-144x144.png">
+  <link rel="apple-touch-icon" sizes="152x152" href="favicons/apple-icon-152x152.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="favicons/apple-icon-180x180.png">
+  <link rel="icon" type="image/png" sizes="192x192"  href="favicons/android-icon-192x192.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicons/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="96x96" href="favicons/favicon-96x96.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="favicons/favicon-16x16.png">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="msapplication-TileColor" content="#ffffff">
+  <meta name="msapplication-TileImage" content="favicons/ms-icon-144x144.png">
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:site" content="@crevalleTech" />
+  <meta name="twitter:title" content="Mistakes Rails Developers Make in Elixir Part 1: Background Jobs - Crevalle" />
+  <meta name="twitter:description" content="You probably don't need a Redis-backed background job system in your Elixir application.  Here are some approaches to solving the problem of asynchronous work." />
+  <meta name="twitter:image" content="images/logo.svg" />
+
+  <meta property="og:url"         content="http://crevalle.io/mistakes-rails-developers-make-in-phoenix-pt-1-background-jobs.html" />
+  <meta property="og:type"        content="website" />
+  <meta property="og:title"       content="Mistakes Rails Developers Make in Elixir Part 1: Background Jobs - Crevalle" />
+  <meta property="article:author" content="https://www.linkedin.com/in/desmondbowe" />
+  <meta property="og:description" content="You probably don't need a Redis-backed background job system in your Elixir application.  Here are some approaches to solving the problem of asynchronous work." />
+  <meta property="og:image" content="images/logo.svg"/>
+  <title>Mistakes Rails Developers Make in Elixir Part 1: Background Jobs - Crevalle</title>
+  <link media="all" rel="stylesheet" href="css/main.css">
+  <!-- required stylesheets and scripts -->
+  <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js" defer></script>
+  <script type="text/javascript">window.jQuery || document.write('<script src="js/jquery-1.11.2.min.js"><\/script>')</script>
+  <script type="text/javascript" src="js/jquery.main.js" defer></script>
+</head>
+<body>
+  <div id="wrapper">
+    <header id="header">
+      <div class="container">
+        <div class="logo">
+          <a href="#"><img src="images/logo.svg" width="95" height="21" alt="CREVALLE"></a>
+        </div>
+        <div class="link-holder">
+          <span>Mistakes Rails Developers Make in Elixir Part 1: Background Jobs</span>
+        </div>
+      </div>
+    </header>
+    <main id="main" role="main">
+      <div class="container">
+        <section class="intro-section show-header">
+          <div class="big-logo">
+            <a href="index.html">
+              <img src="images/logo.svg" width="195" height="186" alt="CREVALLE WORLD WIDE WEB SERVICES LOS ANGELES, CALIFORNIA">
+            </a>
+            <p>Blog</p>
+          </div>
+          <strong class="big-title">Mistakes Rails Developers Make in Elixir Part 1: Background Jobs</strong>
+          <time class="custom-time" datetime="2018-03-15">March 15, 2018</time>
+        </section>
+        <hr class="range">
+        <div class="sample-text">
+          <p><strong>Summary:</strong> Elixir has many constructs for doing work asynchronously.  Learn them and use them!</p>
+
+          <p>When cast iron was first used in building facades, architects treated it like the prevailing material at the time: stone.  Stone has relatively poor tensile strength, meaning a flat piece of stone above a window could not bear the weight of a tall building above it.  Thus, engineers would use arches to convert the tensile stresses into compressive stress, which stone handles very well.</p>
+          <p>
+            <figure>
+              <img src="images/blog/aqueduct.jpg" alt="stone bridge">
+              <figcaption>classic stone archway</figcaption>
+            </figure>
+          </p>
+          <p>Iron, however, has much stronger tensile strength and did not need to be bent into an arch to be structurally sound. Still, because architects in the mid-19th century had been trained in techniques to work around stone's shortcomings, they continued to use these techniques even though they were no longer necessary with the new materials.  It took several decades for architects and engineers to grow out of the old paradigms and use the new technologies in novel ways, and we can see examples of window arches getting flatter and more abstract.</p>
+          <p>
+            <figure>
+              <img src="images/blog/haughwout.jpg" alt="Haughwout Building, New York City">
+              <figcaption>New York's Haughwout Building, early use of cast iron.  Note the rounded window arches (1857)</figcaption>
+            </figure>
+          </p>
+          <p>
+            <figure>
+              <img src="images/blog/judd.jpg" alt="101 Spring Street, New York City">
+              <figcaption>101 Spring Street, New York, with flat, abstract window arches (1870)</figcaption>
+            </figure>
+          </p>
+          <p>Similarly, experienced Rails developers coming to Elixir and Phoenix try to reimplement familiar patterns that evolved to compensate for the weaknesses of the old system.  In my consulting, I see many newcomers translate their experience into unidiomatic Elixir code that doesn't harness the strengths of the technology.  Today we'll look at one tool Rails developers reflexively reach for, and how we might do things differently in Elixir: <strong>Background Job Queues</strong>.</p>
+          <h3>Background Job Queues</h3>
+          <p>Any nontrivial Rails application has a background job framework such as Sidekiq.  We use this system to:
+            <ul>
+              <li>defer work so the user isn't kept waiting, as when setting up a user account with data from external sources</li>
+              <li>perform ongoing background work that isn't initiated by a user, such as fetching the latest value of your cryptocurrency</li>
+              <li>speed up response times by moving nonessential work out of the user request cycle, like sending a welcome email</li>
+            </ul>
+            </p>
+          <p>So what should you use instead?</p>
+          <p>Elixir has several tools available for doing work in the background; the main ones are <strong>Supervisors, GenServers, </strong>and<strong> Tasks</strong>. You'll have to interrogate your use case and weigh your options when choosing which to use.  How would we use them in our examples above?</p>
+          <h3>Deferring Work</h3>
+          <p>In the first case, we have a hypothetical system that completes a user's account setup by connecting to two external data sources. We use the user's address to find the nearest fulfillment center and we create a record in a separate CRM with the user's name and birthday.  We then store <code>fulfillment_center_id</code> and <code>crm_id</code> keys on the user our main database (these don't have to be local foreign keys, they're just ids to track the user across services).  Here I recommend <i>Supervised Tasks</i>.  This lets us do the jobs concurrently and restart them if they fail.  We also don't care about the return values for these tasks - they perform some side effects and that's it.  Let's build out our supervision tree for this scenario.</p>
+          <p>Your application should define a <code>Task.Supervisor</code> that starts when your application launches.  We give it the name <code>YourApp.AccountSetupSupervisor</code>, which gives the supervisor semantic meaning for our use case, and we define a module with the same name with convenience functions for interacting with it.  Your system can have many <code>Task.Supervisor</code>s for managing different types of tasks.</p>
+          <script src="https://gist.github.com/desmondmonster/03f04e73d0ed809ff3666c5b2fa9e03d.js"></script>
+          <p>When a user account is created, your controller or account context calls <code>YourApp.AccountSetupSupervisor.set_up_user_account/1</code> to complete the user account setup.  At this point our user is already in our database.  This module spawns two Tasks - one for connecting to a Fulfillment Service and one for connecting to the CRM - and adds them to its supervision tree with <code>Task.Supervisor.start_child/5</code>.  We use the <code>restart: :transient</code> option to tell the supervisor to restart the Task only if it exits abnormally, i.e., some operation failed and the process crashed.  The supervisor will restart the process up to 3 times in 5 seconds, then give up.  If the operation succeeds, the process exits normally, and life goes on.</p>
+          <script src="https://gist.github.com/desmondmonster/e35fe4e14e9e282dfafb02fcc4d8edf3.js"></script>
+          <p>We place our logic in two separate modules, called <code>YourApp.Fulfillment</code> and <code>YourApp.CRM</code>. Each is responsible for knowing how to connect to its external service and updating the user account with its results.  This pattern also lets us put all code related to interacting with each service into one module.  We pass the user down into each Task so that it can extract the relevant API keys for its external calls, as well as to update the user.  Resist the urge to find clever ways to avoid passing arguments; this itch is responsible for many poor design decisions.</p>
+          <script src="https://gist.github.com/desmondmonster/4cd2429047838b635b92a293ed70062d.js"></script>
+          <p>This way, the caller immediately returns to the user, who can see a helpful About Us screen while the system is hard at work.  If one of the Tasks fails to connect to its data source, we can rely on the Supervisor's restart strategy to retry a few times and eventually give up.  We confine the responsibilities of each Task to enforce clear separation of duties, and we can call this code from elsewhere in our application if we want to.  And we reduce our database calls since the Supervisor and Tasks get a user object directly instead of a <code>user_id</code>.</p>
+          <h3>Ongoing Background Work</h3>
+          <p>In the second case of ongoing background work, trying using a GenServer.  Two reasons GenServers are cool is because you don't have to serialize arguments to them like you do with Sidekiq; and because resource-intensive processes (did you drop an infinite recursive loop into your code?) will not plunder your user-facing responsiveness thanks to the BEAM's fair scheduling.  You can also drop some useful statistics into your GenServer's <code>state</code> so you can see what it's doing with the help of the <code>observer</code>.</p>
+          <p>Let's look at our cryptocurrency account value example.  If we've wired up our frontend to update the DOM in realtime via Phoenix channels once our system has the data, our only job is to ping the node every second for the latest data.  For these recurring tasks, I use a technique where we spin up a GenServer during application startup.  The GenServer asks the BEAM to send it a <code>work</code> message after 1000ms and then goes to sleep.  Remember, sleeping processes do not affect the performance of your system.  When the interval has elapsed, the BEAM sends the message to the GenServer, which wakes up, does the work, schedules another message to be sent in 1000ms, and goes back to sleep.</p>
+          <script src="https://gist.github.com/desmondmonster/c42ef495896449d689a48da51de9e628.js"></script>
+          <p>If the work is simple and you don't mind a little drift, you can have the GenServer handle both the work and the scheduling/sleeping responsibilities.  If the work is expensive or your intervals are absolute, have the GenServer spawn a Task to do the heavy lifting and let the GenServer be responsible only for the scheduling.  Bear in mind here that if a Task takes an unexpectedly long time to complete, it may overwrite fresher data because it finished last.</p>
+          <p>You can spin up a GenServer for each user, but you may end up in a situation where your system is hammering the node with requests for the latest data; GenServers are all working concurrently!  This approach generally works best with system-wide state, such as the weather in Los Angeles.  We only need one process to fetch the latest conditions (sunny and warm 🏖), and all connected users simply use that same piece of data.</p>
+          <p></p>
+          <p><h3>Moving Nonessential Work</h3></p>
+          <p>Cool!  What about the third case, where we want to speed up response times to the user?  These actions are generally one-offs or fire-and-forget, so we'll use a <code>Task</code>.  Simply wrap your email sending code in a <code>Task.start</code> block and you're done!  Yay!</p>
+          <script src="https://gist.github.com/desmondmonster/ea8b1eed218264f3def7822a8d42a04b.js"></script>
+          <p>This approach doesn't give you a lot of options for retrying failed jobs.  If the work is critical, start a supervisor and have it spawn a task that can be restarted.  If you're tempted to say "that sounds like a lot of work, why not just pull in a background job system," don't fall for it!  Starting a supervision tree is simple and straightforward.  Do it twice and you'll do it in your sleep.  Remember, a background queue has several moving pieces, and by "moving pieces" I mean "points of failure."  It's your 2am PagerDuty call.</p>
+          <p></p>
+          <p><h3>Other Considerations</h3></p>
+          <p></p>
+          <p>There are some situations where a background job framework does make sense.  If you reboot your system while it's doing work, the work may be lost.  Such cases call for an independent system that survives application restarts.</p>
+          <p>If that's your use case, I recommend a message broker like RabbitMQ (also built in Erlang!) instead of the Redis-separate-copy-of-your-app setup.  For one, RabbitMQ has much more robust monitoring, queueing, and retry features.  Plus, you can put your consumers (ie job workers) right inside your main application!  Running your workers in a separate application is a big cognitive load and adds complications to your deployment strategy.  Having the workers inside your app (remember, processes are fairly scheduled) lets you seamlessly interact with the rest of your app's state and keeps deployment simple.  Two big wins.</p>
+          <p>Oh, and you no longer need to worry about "priority" queues.  Everything happens concurrently, and processes sending emails won't interfere with processes building out user accounts.  (It's possible to give processes High Priority on the BEAM scheduler, but this is extremely rare and you should avoid it unless you Know What You Are Doing.)</p>
+          <p>Be judicious about needing the ability to retry jobs.  Often when we see failures rack up in our Sidekiq dashboard, we just clear them out.  Important retries are usually done manually, or at least under close supervision by an engineer, instead of being blindly requeued.</p>
+          <p>Many of us came to Elixir because it addresses shortcomings in the systems we're used to working on.  We lose many of those benefits if we take our baggage with us!  Much of the fluency in choosing how to do work in the background comes from understanding Erlang's process model and how the system is built to let you spawn concurrent processes to do work.  The more you learn about processes, the better and more idiomatic your architectural decisions will be.</p>
+          <p>Like this?  hire me!</p>
+
+          <div class="author-holder">
+            <a class="name" href="mailto:desmond@crevalle.io">— Desmond Bowe</a>
+            <strong class="position">Crevalle founder</strong>
+          </div>
+
+          <div class="links">
+            <div class="prev">
+              <a href="building-a-community.html" class="animated anchor">&lt Building A Community</a>
+            </div>
+          </div>
+        </div>
+        <div class="tile-holder">
+          <section class="section-contact">
+            <div class="sub-section">
+              <div class="title-box">
+                <strong class="h1">Let's work together.</strong>
+                <p>Project? Question? Reach out and say hello.</p>
+              </div>
+              <ul class="social-networks">
+                <li>
+                  <a href="mailto:&#104;&#101;&#108;&#108;&#111;&#064;&#099;&#114;&#101;&#118;&#097;&#108;&#108;&#101;&#046;&#105;&#111;">
+                    <i class="icon-email"></i>
+                    <div class="text-box">
+                      <p>Email us at</p>
+                      <span class="sub-link">&#104;&#101;&#108;&#108;&#111;&#064;&#099;&#114;&#101;&#118;&#097;&#108;&#108;&#101;&#046;&#105;&#111;</span>
+                    </div>
+                  </a>
+                </li>
+                <li>
+                  <a href="#">
+                    <i class="icon-twetter"></i>
+                    <div class="text-box">
+                      <p>Tweet at us</p>
+                      <span class="sub-link">@crevalleTech</span>
+                    </div>
+                  </a>
+                </li>
+              </ul>
+            </div>
+            <div class="sub-section form-holder">
+              <div class="title-box">
+                <strong class="h1">Stay in touch.</strong>
+                <p>Sign up to our infrequent newsletter to hear what we are thinking about.</p>
+              </div>
+              <form action="#" id="contact-form" class="contact-form">
+                <div class="input-box">
+                  <input type="email" placeholder="email@example.com" id="i1">
+                  <label for="i1">Your email address</label>
+                </div>
+                <button type="submit">Subscribe <i class="icon-chevron-right"></i></button>
+              </form>
+            </div>
+          </section>
+        </div>
+        <div class="list-bar">
+          <a class="ico-link" href="index.html">
+            <img src="images/transistor-rotated-small.png" width="50" alt="CREVALLE">
+          </a>
+        </div>
+      </div>
+    </main>
+  </div>
+    <script type="text/javascript">
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+      ga('create', 'UA-58551961-1', 'auto');
+      ga('send', 'pageview');
+    </script>
+</body>
+</html>
