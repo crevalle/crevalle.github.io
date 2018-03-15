@@ -127,7 +127,7 @@
           <p>Oh, and you no longer need to worry about "priority" queues.  Everything happens concurrently, and processes sending emails won't interfere with processes building out user accounts.  (It's possible to give processes High Priority on the BEAM scheduler, but this is extremely rare and you should avoid it unless you Know What You Are Doing.)</p>
           <p>Be judicious about needing the ability to retry jobs.  Often when we see failures rack up in our Sidekiq dashboard, we just clear them out.  Important retries are usually done manually, or at least under close supervision by an engineer, instead of being blindly requeued.</p>
           <p>Many of us came to Elixir because it addresses shortcomings in the systems we're used to working on.  We lose many of those benefits if we take our baggage with us!  Much of the fluency in choosing how to do work in the background comes from understanding Erlang's process model and how the system is built to let you spawn concurrent processes to do work.  The more you learn about processes, the better and more idiomatic your architectural decisions will be.</p>
-          <p>Like this?  hire me!</p>
+          <p><i>I coach teams coming to Elixir on best practices.  Want to avoid common mistakes?  Hire me!</i></p>
 
           <div class="author-holder">
             <a class="name" href="mailto:desmond@crevalle.io">— Desmond Bowe</a>
