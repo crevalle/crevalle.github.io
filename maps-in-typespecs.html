@@ -69,27 +69,27 @@
         <div class="sample-text">
           <p><strong>Summary: </strong>We look at some examples of how to typespec maps that are passed as arguments to your functions.  We assume you're loosely familiar with Elixir typespec syntax and the <a href="https://github.com/jeremyjh/dialyxir" target="_blank">Dialyzer/Dialyxir</a> tool.</p>
 
-          <p>On this week's episode of ElixirTalk, our we made a mistake during our discussion of typespecs that I'd like to address and correct.  We erroneously suggested that, when typespecing maps in function calls, you could only specify the type of the key, not the value.  That's totally backwards!  You can absolutely specify the types of the values in your map, along with the keys, and that's really important for identifying valid function parameters.</p>
+          <p>On this week's episode of ElixirTalk, we made a mistake during our discussion of typespecs that I'd like to address and correct.  We erroneously suggested that, when typespecing maps in function calls, you could only specify the type of the key, not the value.  That's totally backwards!  You can absolutely specify the types of the values in your map, along with the keys, and that's really important for identifying valid function parameters.</p>
           <p>Let's look at some examples.</p>
-          <code> @spec oof(map()) :: nil </code>
+          <code> @spec foo(map()) :: nil </code>
           <p>The most generic. Can be called with any map, regardless of what keys are present.  Empty maps are also legal.</p>
 
-          <code>@spec oof(%{}) :: nil</code>
+          <code>@spec foo(%{}) :: nil</code>
           <p>Must be called with an empty map.</p>
 
-          <code>@spec oof(%{required(:email) => String.t()}) :: nil</code>
+          <code>@spec foo(%{required(:email) => String.t()}) :: nil</code>
           <p>Expects a one-element map.  The single key must be the atom <code>:email</code> and its value must be a string.  This can also be written as:</p>
 
-          <code>@spec oof(%{email: String.t()}) :: nil</code>
+          <code>@spec foo(%{email: String.t()}) :: nil</code>
           <p>This syntax is useful shorthand when your map contains only atom keys that are all required.  You cannot mix optional and required keys with this syntax.</p>
 
-          <code>@spec oof(%{required(:email) => String.t(), required(:age) => integer()}) :: nil</code>
+          <code>@spec foo(%{required(:email) => String.t(), required(:age) => integer()}) :: nil</code>
           <p>Expects a two-element map.  One key must be the atom <code>:email</code>, which points to a string, and the other key must be the atom <code>:age</code>, which points to an integer.</p>
 
-          <code>@spec oof(%{required(:email) => String.t(), optional(:age) => integer()}) :: nil</code>
+          <code>@spec foo(%{required(:email) => String.t(), optional(:age) => integer()}) :: nil</code>
           <p>Similar to before, except the map doesn't have to contain the <code>:age</code> key.  <code>:email</code> must still be present.</p>
 
-          <code>@spec oof(%{required(:email) => String.t(), optional(:age) => integer(), optional(any()) => any()}) :: nil</code>
+          <code>@spec foo(%{required(:email) => String.t(), optional(:age) => integer(), optional(any()) => any()}) :: nil</code>
           <p>Keys aside from <code>:email</code> and <code>:age</code> are allowed in the map.  Useful for when your function accepts a large map, such as <code>params</code>, but only does work on a few of the elements.</p>
 
           <p>
@@ -105,19 +105,19 @@
           </p>
           <p>
           <code>
-            @spec oof(%{required(:email) => String.t()}) :: nil  # => ok</br>
-            @spec oof(%{required("email") => String.t()}) :: nil  # => NOT ok
+            @spec foo(%{required(:email) => String.t()}) :: nil  # => ok</br>
+            @spec foo(%{required("email") => String.t()}) :: nil  # => NOT ok
           </code>
           </p>
 
           <p>Rather than specifying the key name, you can only specify its type:</p>
-          <code>@spec oof(%{required(String.t()) => String.t()}) :: nil</code>
+          <code>@spec foo(%{required(String.t()) => String.t()}) :: nil</code>
           <p>All keys and values must be strings.  Will accept an empty map.</p>
 
-          <code>@spec oof(%{required(atom()) => String.t()}) :: nil</code>
+          <code>@spec foo(%{required(atom()) => String.t()}) :: nil</code>
           <p>All keys must be atoms and all values must be strings.  Will accept an empty map.</p>
 
-          <code>@spec oof(%{required(atom()) => String.t(), required(String.t()) => String.t()}) :: nil</code>
+          <code>@spec foo(%{required(atom()) => String.t(), required(String.t()) => String.t()}) :: nil</code>
           <p>Keys must be either atoms or strings.  Although it's marked "required", you can pass in a map that does not have any string keys.  I don't know why this is so.</p>
 
           <p>If you want key name checking and your keys are strings, coerce them to atoms or cast the map to a struct.  <strong>DO NOT</strong> unconditionally coerce user-supplied params to atom keys.  Atoms aren't garbage collected and a malicious user can crash your system by hammering your endpoint with rotating param garbage.</p>
@@ -151,7 +151,7 @@
           </p>
 
           <p><h3>The Bottom Line</h3></p>
-          <p>As pleasant as a dynamic language is, typespecs are super helpful for documentation and correctness guarantees, even in conjunction with robust tests.  Although they may seem like overkill on small or personal projects, in production code - with its vagaries, loose ends, and operational complexity - they can be extremeley helpful, especially when onboarding new engineers.</p>
+          <p>As pleasant as a dynamic language is, typespecs are super helpful for documentation and correctness guarantees, even in conjunction with robust tests.  Although they may seem like overkill on small or personal projects, in production code - with its vagaries, loose ends, and operational complexity - they can be extremely helpful, especially when onboarding new engineers.</p>
 
 
 
