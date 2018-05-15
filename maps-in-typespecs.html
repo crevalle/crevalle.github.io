@@ -69,7 +69,7 @@
         <div class="sample-text">
           <p><strong>Summary: </strong>We look at some examples of how to typespec maps that are passed as arguments to your functions.  We assume you're loosely familiar with Elixir typespec syntax and the <a href="https://github.com/jeremyjh/dialyxir" target="_blank">Dialyzer/Dialyxir</a> tool.</p>
 
-          <p>On this week's episode of ElixirTalk, we made a mistake during our discussion of typespecs that I'd like to address and correct.  We erroneously suggested that, when typespecing maps in function calls, you could only specify the type of the key, not the value.  That's totally backwards!  You can absolutely specify the types of the values in your map, along with the keys, and that's really important for identifying valid function parameters.</p>
+          <p>On <a href="https://soundcloud.com/elixirtalk/episode-113-typespecs-tests-hot-code-upgrades-and-empex" target="_blank">this week's episode of ElixirTalk</a>, we made a mistake during our discussion of typespecs that I'd like to address and correct.  We erroneously suggested that, when typespecing maps in function calls, you could only specify the type of the key, not the value.  That's totally backwards!  You can absolutely specify the types of the values in your map, along with the keys, and that's really important for identifying valid function parameters.</p>
           <p>Let's look at some examples.</p>
           <code> @spec foo(map()) :: nil </code>
           <p>The most generic. Can be called with any map, regardless of what keys are present.  Empty maps are also legal.</p>
