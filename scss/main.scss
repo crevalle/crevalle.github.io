@@ -43,7 +43,7 @@ $media-expressions: (
 
 .container {
 	@extend %clearfix;
-	max-width: 650px;
+	max-width: 800px;
 	margin: 0 auto;
 	padding: 0 15px;
 	&.range {
@@ -648,6 +648,6 @@ figcaption {
 }
 
 code {
-  background-color: antiquewhite;
+  /* background-color: antiquewhite; */
   color: red;
 }
